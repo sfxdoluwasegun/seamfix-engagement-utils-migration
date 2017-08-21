@@ -43,6 +43,12 @@
         	<artifactId>commons-lang</artifactId>
         	<version>2.6</version>
         </dependency>
+        <dependency>
+			<groupId>ng.autotopup</groupId>
+			<artifactId>hsdp-engagement</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+			<type>ejb</type>
+		</dependency>
     </dependencies>
 
     <build>
@@ -68,7 +74,7 @@
                     <ejbVersion>3.1</ejbVersion>
                     <archive>
 						<manifestEntries>
-							<Dependencies>, deployment.commons-lang-2.6.jar</Dependencies>
+							<Dependencies>deployment.hsdp-engagement.jar, deployment.commons-lang-2.6.jar</Dependencies>
 						</manifestEntries>
 					</archive>
                 </configuration>
