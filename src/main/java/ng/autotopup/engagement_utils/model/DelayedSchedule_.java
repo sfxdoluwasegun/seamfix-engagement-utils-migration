@@ -8,8 +8,9 @@ import javax.persistence.metamodel.StaticMetamodel;
 
 @Generated(value="Dali", date="2017-05-26T14:40:53.854+0100")
 @StaticMetamodel(DelayedSchedule.class)
-public class DelayedSchdeule_ extends JEntity_ {
+public class DelayedSchedule_ extends JEntity_ {
 	public static volatile SingularAttribute<DelayedSchedule, String> message;
 	public static volatile SingularAttribute<DelayedSchedule, String> msisdn;
 	public static volatile SingularAttribute<DelayedSchedule, Timestamp> timestamp;
+	public static volatile SingularAttribute<DelayedSchedule, Boolean> engaged;
 }

@@ -52,6 +52,20 @@ public class Utils {
 		else
 			scheduleMessageForLater(props.getLong("engagement-delay-hours", 11L), message, MSISDN);
 	}
+	
+	/**
+	 * Determine if message should be forwarded at this time or not at all.
+	 * Used particularly for status update notifications.
+	 * 
+	 * @param message message to be sent via SMS
+	 * @param MSISDN subscriber unique MSISDN
+	 */
+	@Asynchronous
+	public void handleReportEngagement(String message, String MSISDN){
+		
+		if (appbean.isEngaging())
+			smsMtnService.sendSms(message, MSISDN);
+	}
 
 	/**
 	 * Create postponed schedule for engagement.

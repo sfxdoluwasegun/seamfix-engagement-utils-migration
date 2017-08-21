@@ -28,6 +28,8 @@ public class DelayedSchedule extends JEntity {
 	
 	@Column(nullable = false)
 	private Timestamp timestamp ;
+	
+	private boolean engaged = false ;
 
 	public String getMessage() {
 		return message;
@@ -51,6 +53,14 @@ public class DelayedSchedule extends JEntity {
 
 	public void setTimestamp(Timestamp timestamp) {
 		this.timestamp = timestamp;
+	}
+
+	public boolean isEngaged() {
+		return engaged;
+	}
+
+	public void setEngaged(boolean engaged) {
+		this.engaged = engaged;
 	}
 
 }
