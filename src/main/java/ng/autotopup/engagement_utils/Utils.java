@@ -9,8 +9,10 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -20,11 +22,15 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.jboss.logging.Logger;
+
 import ng.autotopup.engagement.hsdp.SmsMtnService;
 import ng.autotopup.engagement_utils.model.DelayedSchedule;
 
 @Stateless(name = "EngUtils")
 public class Utils {
+	
+	private Logger log = Logger.getLogger(getClass());
 
 	@EJB(lookup = "java:global/hsdp-engagement/SmsMtnService")
 	private SmsMtnService smsMtnService ;
@@ -37,6 +43,13 @@ public class Utils {
 	
 	@PersistenceContext
 	private EntityManager entityManager ;
+	
+	private DateTimeFormatter formatter ;
+	
+	@PostConstruct
+	public void init(){
+		formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+	}
 	
 	/**
 	 * Determine if message should be forwarded at this time or scheduled for later.
@@ -125,6 +138,27 @@ public class Utils {
 			appbean.setLastModifed(currentTimestamp);
 			props.loadProperties();
 		}
+	}
+
+	public void areWeEngaging() {
+		// TODO Auto-generated method stub
+		
+		String startTime = props.getProperty("engagement-start-time", "065959");
+		String stopTime = props.getProperty("engagement-end-time", "195959");
+		
+		String formattedDate = appbean.getCurrentDate();
+		
+		LocalDateTime start = LocalDateTime.parse(new StringBuffer(formattedDate).append(startTime).toString(), formatter);
+		LocalDateTime stop = LocalDateTime.parse(new StringBuffer(formattedDate).append(stopTime).toString(), formatter);
+		
+		LocalDateTime currentTime = LocalDateTime.now();
+		
+		if (currentTime.isAfter(start) && currentTime.isBefore(stop))
+			appbean.setEngaging(true);
+		else
+			appbean.setEngaging(false);
+		
+		log.info("Are we engaging:" + appbean.isEngaging());
 	}
 
 }

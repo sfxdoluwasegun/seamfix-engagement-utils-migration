@@ -1,7 +1,6 @@
 package ng.autotopup.engagement_utils;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import javax.annotation.PostConstruct;
@@ -18,40 +17,24 @@ public class ScheduleManager {
 	private ApplicationBean appbean  ;
 	
 	@Inject
-	private PropertiesManager props ;
-	
-	@Inject
 	private Utils utils ;
 	
-	private DateTimeFormatter formatter ;
 	private DateTimeFormatter dateformatter ;
 	
 	@PostConstruct
 	public void init(){
 		
-		formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 		dateformatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 		
 		appbean.setCurrentDate(LocalDate.now().format(dateformatter));
+		utils.cachePropetiesFileTimeStamp();
+		utils.checkPropertiesFile();
+		utils.areWeEngaging();
 	}
 	
 	@Schedule(hour = "*")
 	public void hourlyTasks(){
-		
-		String startTime = props.getProperty("engagement-start-time", "06:59:59");
-		String stopTime = props.getProperty("engagement-end-time", "19:59:59");
-		
-		String formattedDate = appbean.getCurrentDate();
-		
-		LocalDateTime start = LocalDateTime.parse(new StringBuffer(formattedDate).append(startTime).toString(), formatter);
-		LocalDateTime stop = LocalDateTime.parse(new StringBuffer(formattedDate).append(stopTime).toString(), formatter);
-		
-		LocalDateTime currentTime = LocalDateTime.now();
-		
-		if (currentTime.isAfter(start) && currentTime.isBefore(stop))
-			appbean.setEngaging(true);
-		else
-			appbean.setEngaging(false);
+		utils.areWeEngaging();
 	}
 	
 	@Schedule(hour = "0")
