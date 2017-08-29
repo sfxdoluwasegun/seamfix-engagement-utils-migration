@@ -2,8 +2,10 @@ package ng.autotopup.engagement_utils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.AccessTimeout;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -11,6 +13,7 @@ import javax.inject.Inject;
 
 @Startup
 @Singleton
+@AccessTimeout(unit = TimeUnit.MINUTES, value = 15)
 public class ScheduleManager {
 	
 	@Inject
@@ -29,12 +32,6 @@ public class ScheduleManager {
 		appbean.setCurrentDate(LocalDate.now().format(dateformatter));
 		utils.cachePropetiesFileTimeStamp();
 		utils.checkPropertiesFile();
-		utils.areWeEngaging();
-	}
-	
-	@Schedule(hour = "*")
-	public void hourlyTasks(){
-		utils.areWeEngaging();
 	}
 	
 	@Schedule(hour = "0")

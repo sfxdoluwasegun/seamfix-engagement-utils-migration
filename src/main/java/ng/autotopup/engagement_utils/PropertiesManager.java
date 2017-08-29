@@ -1,8 +1,8 @@
 package ng.autotopup.engagement_utils;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.ejb.Singleton;
 
-@ApplicationScoped
+@Singleton(name = "GlobalProps")
 public class PropertiesManager extends FileManager {
 
 	private String targetPropertyFilename ;

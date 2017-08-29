@@ -14,7 +14,6 @@ import java.time.temporal.ChronoUnit;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -24,16 +23,12 @@ import javax.persistence.PersistenceContext;
 
 import org.jboss.logging.Logger;
 
-import ng.autotopup.engagement.hsdp.SmsMtnService;
 import ng.autotopup.engagement_utils.model.DelayedSchedule;
 
 @Stateless(name = "EngUtils")
 public class Utils {
 	
 	private Logger log = Logger.getLogger(getClass());
-
-	@EJB(lookup = "java:global/hsdp-engagement/SmsMtnService")
-	private SmsMtnService smsMtnService ;
 	
 	@Inject
 	private ApplicationBean appbean ;
@@ -50,35 +45,6 @@ public class Utils {
 	public void init(){
 		formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 	}
-	
-	/**
-	 * Determine if message should be forwarded at this time or scheduled for later.
-	 * 
-	 * @param message message to be sent via SMS
-	 * @param MSISDN subscriber unique MSISDN
-	 */
-	@Asynchronous
-	public void handleEngagement(String message, String MSISDN){
-		
-		if (appbean.isEngaging())
-			smsMtnService.sendSms(message, MSISDN);
-		else
-			scheduleMessageForLater(props.getLong("engagement-delay-hours", 11L), message, MSISDN);
-	}
-	
-	/**
-	 * Determine if message should be forwarded at this time or not at all.
-	 * Used particularly for status update notifications.
-	 * 
-	 * @param message message to be sent via SMS
-	 * @param MSISDN subscriber unique MSISDN
-	 */
-	@Asynchronous
-	public void handleReportEngagement(String message, String MSISDN){
-		
-		if (appbean.isEngaging())
-			smsMtnService.sendSms(message, MSISDN);
-	}
 
 	/**
 	 * Create postponed schedule for engagement.
@@ -87,7 +53,8 @@ public class Utils {
 	 * @param message engagement message
 	 * @param MSISDN subscriber to be engaged
 	 */
-	private void scheduleMessageForLater(long increment, String message, String MSISDN) {
+	@Asynchronous
+	public void scheduleMessageForLater(long increment, String message, String MSISDN) {
 		// TODO Auto-generated method stub
 		
 		DelayedSchedule delayedSchedule = new DelayedSchedule();
@@ -140,7 +107,12 @@ public class Utils {
 		}
 	}
 
-	public void areWeEngaging() {
+	/**
+	 * Determine from file properties if engagement window is active for SMS engagement.
+	 *  
+	 * @return true if engagement window is open
+	 */
+	public boolean areWeEngaging() {
 		// TODO Auto-generated method stub
 		
 		String startTime = props.getProperty("engagement-start-time", "065959");
@@ -152,13 +124,15 @@ public class Utils {
 		LocalDateTime stop = LocalDateTime.parse(new StringBuffer(formattedDate).append(stopTime).toString(), formatter);
 		
 		LocalDateTime currentTime = LocalDateTime.now();
+		boolean engaging = false;
 		
 		if (currentTime.isAfter(start) && currentTime.isBefore(stop))
-			appbean.setEngaging(true);
-		else
-			appbean.setEngaging(false);
+			engaging = true;
 		
+		appbean.setEngaging(engaging);
 		log.info("Are we engaging:" + appbean.isEngaging());
+		
+		return engaging;
 	}
 
 }

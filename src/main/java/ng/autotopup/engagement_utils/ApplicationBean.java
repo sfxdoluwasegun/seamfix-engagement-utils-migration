@@ -4,10 +4,13 @@ import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
 import javax.ejb.AccessTimeout;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
 import javax.ejb.Singleton;
 
-@Singleton
-@AccessTimeout(unit = TimeUnit.MINUTES, value = 5)
+@Lock(LockType.WRITE)
+@Singleton(name = "GlobalBean")
+@AccessTimeout(unit = TimeUnit.MINUTES, value = 30)
 public class ApplicationBean {
 	
 	private String currentDate ;
@@ -32,6 +35,7 @@ public class ApplicationBean {
 		this.engaging = engaging;
 	}
 
+	@Lock(LockType.READ)
 	public LocalDateTime getLastModifed() {
 		return lastModifed;
 	}
