@@ -4,9 +4,135 @@
  */
 package ng.autotopup.engagement_utils;
 
+import java.io.File;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.jboss.logging.Logger;
+
+import ng.autotopup.engagement_utils.model.DelayedSchedule;
 
 @Stateless(name = "EngUtils")
 public class Utils {
+	
+	private Logger log = Logger.getLogger(getClass());
+	
+	@Inject
+	private ApplicationBean appbean ;
+	
+	@Inject
+	private PropertiesManager props ;
+	
+	@PersistenceContext
+	private EntityManager entityManager ;
+	
+	private DateTimeFormatter formatter ;
+	
+	@PostConstruct
+	public void init(){
+		formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+	}
+
+	/**
+	 * Create postponed schedule for engagement.
+	 * 
+	 * @param increment number of hours to shift back engagement
+	 * @param message engagement message
+	 * @param MSISDN subscriber to be engaged
+	 */
+	@Asynchronous
+	public void scheduleMessageForLater(long increment, String message, String MSISDN) {
+		// TODO Auto-generated method stub
+		
+		DelayedSchedule delayedSchedule = new DelayedSchedule();
+		delayedSchedule.setMessage(message);
+		delayedSchedule.setMsisdn(MSISDN);
+		delayedSchedule.setTimestamp(Timestamp.valueOf((LocalDateTime.now().plusHours(increment)).truncatedTo(ChronoUnit.HOURS)));
+		
+		entityManager.persist(delayedSchedule);
+	}
+	
+	/**
+	 * Store current DateModified property of file.
+	 */
+	public void cachePropetiesFileTimeStamp(){
+		
+		LocalDateTime localDateTime = getPropertiesFileCurrentModificationDate();
+		appbean.setLastModifed(localDateTime);
+	}
+	
+	/**
+	 * Retrieved current Date Modified property of file.
+	 * 
+	 * @return {@link LocalDateTime} representing time-stamp of lastModified property of file
+	 */
+	private LocalDateTime getPropertiesFileCurrentModificationDate() {
+		// TODO Auto-generated method stub
+		
+		File file = new File(System.getProperty("jboss.home.dir") + "/app.properties");
+		long milliseconds = 0;
+		
+		if (file.exists())
+			milliseconds = file.lastModified();
+		
+		if (milliseconds == 0)
+			return LocalDateTime.now();
+		
+		return LocalDateTime.ofInstant(Instant.ofEpochMilli(milliseconds), ZoneId.systemDefault());
+	}
+	
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public void checkPropertiesFile() {
+		// TODO Auto-generated method stub
+		
+		LocalDateTime lastModified = appbean.getLastModifed();
+		LocalDateTime currentTimestamp = getPropertiesFileCurrentModificationDate();
+		
+		if (currentTimestamp.isAfter(lastModified)){
+			appbean.setLastModifed(currentTimestamp);
+			props.loadProperties();
+		}
+	}
+
+	/**
+	 * Determine from file properties if engagement window is active for SMS engagement.
+	 *  
+	 * @return true if engagement window is open
+	 */
+	public boolean areWeEngaging() {
+		// TODO Auto-generated method stub
+		
+		String startTime = props.getProperty("engagement-start-time", "075959");
+		String stopTime = props.getProperty("engagement-end-time", "185959");
+		
+		String formattedDate = appbean.getCurrentDate();
+		
+		LocalDateTime start = LocalDateTime.parse(new StringBuffer(formattedDate).append(startTime).toString(), formatter);
+		LocalDateTime stop = LocalDateTime.parse(new StringBuffer(formattedDate).append(stopTime).toString(), formatter);
+		
+		LocalDateTime currentTime = LocalDateTime.now();
+		boolean engaging = false;
+		
+		if (currentTime.isAfter(start) && currentTime.isBefore(stop))
+			engaging = true;
+		
+		appbean.setEngaging(engaging);
+		log.info("Are we engaging:" + appbean.isEngaging());
+		
+		return engaging;
+	}
 
 }
