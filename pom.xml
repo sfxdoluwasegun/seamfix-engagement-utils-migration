@@ -4,7 +4,7 @@
 
     <groupId>ng.autotopup</groupId>
     <artifactId>engagement-utils</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1-FINAL</version>
     <packaging>ejb</packaging>
 
     <name>engagement-utils</name>
