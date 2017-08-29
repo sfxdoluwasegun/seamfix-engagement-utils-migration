@@ -115,8 +115,8 @@ public class Utils {
 	public boolean areWeEngaging() {
 		// TODO Auto-generated method stub
 		
-		String startTime = props.getProperty("engagement-start-time", "065959");
-		String stopTime = props.getProperty("engagement-end-time", "195959");
+		String startTime = props.getProperty("engagement-start-time", "075959");
+		String stopTime = props.getProperty("engagement-end-time", "185959");
 		
 		String formattedDate = appbean.getCurrentDate();
 		
